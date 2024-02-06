@@ -1,13 +1,13 @@
 import json
-
 import requests
-
 import decrypt
 import download
 
-
 class yc:
     def __init__(self):
+        self.credentials_file = 'credentials.json' 
+        self.load_credentials()
+
         while True:
             try:
                 choice1 = int(input('1.手动输入authorization   2.账号密码登录\n请选择登陆方式:'))
@@ -17,18 +17,40 @@ class yc:
                     continue
             except Exception or ValueError:
                 continue
+
         if choice1 == 1:
             self.authorization = input('authorization:')
         elif choice1 == 2:
             print('用户登录')
-            username = input('用户名(手机号):')
-            pw = input('密码:')
+            username = self.username
+            pw = self.password
+            if username is None or pw is None:
+                username = input('请输入用户名:')
+                pw = input('请输入密码:')
+                self.save_credentials(username, pw)
+
             self.authorization = self.login(username, pw)
+
         self.header = {
             'Authorization': self.authorization,
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36 Edg/99.0.1150.55"
         }
 
+    def load_credentials(self):
+        try:
+            with open(self.credentials_file, 'r') as file:
+                credentials = json.load(file)
+                self.username = credentials.get('username')
+                self.password = credentials.get('password')
+        except (FileNotFoundError, json.JSONDecodeError):
+            self.username = None
+            self.password = None
+
+    def save_credentials(self, username, password):
+        credentials = {'username': username, 'password': password}
+        with open(self.credentials_file, 'w') as file:
+            json.dump(credentials, file)
+    
     def getkey(self, dic, value_list):
         res = []
         for value in list(value_list):
